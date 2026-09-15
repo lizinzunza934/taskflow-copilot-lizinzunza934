@@ -164,22 +164,24 @@ class TaskServiceTest {
 
         @Test
         void vencidas_devuelveSoloVencidasYEnOrden() {
-            // Construir datos reales de Task con fechas relativas a hoy
+            // El repositorio devuelve en este orden: vencida hace 1 día, fecha en +3 días (futura),
+            // DONE vencida hace 10 días, sin dueDate, y vencida hace 5 días. Solo las vencidas (no DONE)
+            // deben retornarse, ordenadas por fecha ascendente (más antigua primero).
             try {
-                Task tOld = new Task(1L, "Muy vieja", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(5));
-                Task tRecent = new Task(2L, "Reciente", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(1));
-                Task tDone = new Task(3L, "Hecha", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(2));
-                Task tNoDate = new Task(4L, "Sin fecha", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, null);
+                Task t1day = new Task(10L, "Vencida1", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(1));
+                Task tFuture = new Task(11L, "Futura", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().plusDays(3));
+                Task tDoneOld = new Task(12L, "DoneOld", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(10));
+                Task tNoDate = new Task(13L, "Sin fecha", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, null);
+                Task t5day = new Task(14L, "Vencida5", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(5));
 
-                when(repository.findAll()).thenReturn(List.of(tOld, tRecent, tDone, tNoDate));
+                when(repository.findAll()).thenReturn(List.of(t1day, tFuture, tDoneOld, tNoDate, t5day));
 
                 List<Task> vencidas = service.vencidas();
 
-                // Solo tOld y tRecent (porque tDone está DONE y tNoDate no tiene fecha)
+                // Solo t5day y t1day, ordenadas por fecha ascendente -> t5day (más antigua) primero
                 assertEquals(2, vencidas.size());
-                // Orden POR_FECHA ascendente → la más antigua (tOld) primero
-                assertEquals(1L, vencidas.get(0).getId());
-                assertEquals(2L, vencidas.get(1).getId());
+                assertEquals(14L, vencidas.get(0).getId());
+                assertEquals(10L, vencidas.get(1).getId());
             } catch (Exception e) {
                 throw new IllegalStateException(e);
             }
