@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -154,6 +155,34 @@ class TaskServiceTest {
             assertThrows(TaskNotFoundException.class, () -> service.eliminar(999L));
             // never() + anyLong(): NO se borró nada. (Regla "todos matchers o ninguno": aquí anyLong()).
             verify(repository, never()).deleteById(anyLong());
+        }
+    }
+
+    @Nested
+    @DisplayName("vencidas")
+    class Vencidas {
+
+        @Test
+        void vencidas_devuelveSoloVencidasYEnOrden() {
+            // Construir datos reales de Task con fechas relativas a hoy
+            try {
+                Task tOld = new Task(1L, "Muy vieja", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(5));
+                Task tRecent = new Task(2L, "Reciente", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(1));
+                Task tDone = new Task(3L, "Hecha", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(2));
+                Task tNoDate = new Task(4L, "Sin fecha", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, null);
+
+                when(repository.findAll()).thenReturn(List.of(tOld, tRecent, tDone, tNoDate));
+
+                List<Task> vencidas = service.vencidas();
+
+                // Solo tOld y tRecent (porque tDone está DONE y tNoDate no tiene fecha)
+                assertEquals(2, vencidas.size());
+                // Orden POR_FECHA ascendente → la más antigua (tOld) primero
+                assertEquals(1L, vencidas.get(0).getId());
+                assertEquals(2L, vencidas.get(1).getId());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 

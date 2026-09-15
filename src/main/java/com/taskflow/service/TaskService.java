@@ -111,6 +111,14 @@ public class TaskService {
                 .toList();
     }
 
+    /** Lista las tareas vencidas según Task.estaVencida() y orden por fecha ascendente. */
+    public List<Task> vencidas() {
+        return repository.findAll().stream()
+                .filter(Task::estaVencida)
+                .sorted(TaskOrders.POR_FECHA)
+                .toList();
+    }
+
     /** Busca una tarea por id: delega en el repositorio y deja subir el Optional TAL CUAL. */
     public Optional<Task> buscarPorId(Long id) {
         return repository.findById(id);
