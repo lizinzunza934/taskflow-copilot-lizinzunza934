@@ -1,0 +1,39 @@
+ specs/overdue.md                                   | 42 ++++++++++++++++++++++
+ .../com/taskflow/controller/TaskController.java    | 10 +++++-
+ .../java/com/taskflow/service/TaskService.java     |  8 +++++
+ .../com/taskflow/slice/TaskControllerTest.java     | 16 +++++++++
+ .../java/com/taskflow/unit/TaskServiceTest.java    | 29 +++++++++++++++
+ 5 files changed, 104 insertions(+), 1 deletion(-)
+16	0	src/test/java/com/taskflow/slice/TaskControllerTest.java
+29	0	src/test/java/com/taskflow/unit/TaskServiceTest.java
+
++    /** Lista las tareas vencidas según Task.estaVencida() y orden por fecha ascendente. */
++            // Construir datos reales de Task con fechas relativas a hoy
++                // Solo tOld y tRecent (porque tDone está DONE y tNoDate no tiene fecha)
++                // Orden POR_FECHA ascendente → la más antigua (tOld) primero
+
+MUTANTE: quitado .sorted(TaskOrders.POR_FECHA) de vencidas()
+
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+RESTAURADO: TaskService.java quedó exactamente como estaba.
+
+
++    /** Lista las tareas vencidas según Task.estaVencida() y orden por fecha ascendente. */
++                .filter(Task::estaVencida)
++                .sorted(TaskOrders.POR_FECHA)
+
+
+[INFO] Tests run: 69, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+MUTANTE: quitado .sorted(TaskOrders.POR_FECHA) de vencidas()
+
+[ERROR] Tests run: 8, Failures: 1, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+RESTAURADO: TaskService.java quedó exactamente como estaba.
+
+
+[INFO] Tests run: 69, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+

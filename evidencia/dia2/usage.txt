@@ -1,0 +1,14 @@
+$n = [regex]::Match((git log -1 --merges --format=%s), '#(\d+)').Groups[1].Value
+"PR: $((git remote get-url origin) -replace '\.git$','')/pull/$n" | Tee-Object evidencia\dia2\pr.txt
+
+Get-Clipboard | Set-Content evidencia\dia2\usage.txt
+Add-Content evidencia\dia2\usage.txt '--- al empezar el dia (MP-2) ---'
+Get-Content $HOME\usage-dia2-inicio.txt | Add-Content evidencia\dia2\usage.txt
+Select-String -Path evidencia\dia2\usage.txt -Pattern '\d+ / [\d,]+ AIC'
+
+git add evidencia
+git commit -m "evidencia: dia 2"
+git push
+--- al empezar el dia (MP-2) ---
+Get-Clipboard | Set-Content $HOME\usage-dia2-inicio.txt
+Select-String -Path $HOME\usage-dia2-inicio.txt -Pattern '\d+ / [\d,]+ AIC'
