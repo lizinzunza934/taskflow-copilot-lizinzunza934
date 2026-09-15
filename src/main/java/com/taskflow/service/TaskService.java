@@ -130,4 +130,16 @@ public class TaskService {
                 .filter(t -> t.getPriority() == priority)
                 .toList();
     }
+
+    /**
+     * Lista las tareas sin responsable (assigneeId == null) y ordenadas por fecha ascendente
+     * (TaskOrders.POR_FECHA). Reusa el predicado nombrado en ReportService.SIN_ASIGNAR — no reescribir
+     * la lógica de null-check aquí.
+     */
+    public List<Task> sinResponsable() {
+        return repository.findAll().stream()
+                .filter(ReportService.SIN_ASIGNAR)
+                .sorted(TaskOrders.POR_FECHA)
+                .toList();
+    }
 }
