@@ -111,6 +111,14 @@ public class TaskService {
                 .toList();
     }
 
+    /** Lista las tareas vencidas según Task.estaVencida() y orden por fecha ascendente. */
+    public List<Task> vencidas() {
+        return repository.findAll().stream()
+                .filter(Task::estaVencida)
+                .sorted(TaskOrders.POR_FECHA)
+                .toList();
+    }
+
     /** Busca una tarea por id: delega en el repositorio y deja subir el Optional TAL CUAL. */
     public Optional<Task> buscarPorId(Long id) {
         return repository.findById(id);
@@ -120,6 +128,18 @@ public class TaskService {
     public List<Task> porPrioridad(Priority priority) {
         return repository.findAll().stream()
                 .filter(t -> t.getPriority() == priority)
+                .toList();
+    }
+
+    /**
+     * Lista las tareas sin responsable (assigneeId == null) y ordenadas por fecha ascendente
+     * (TaskOrders.POR_FECHA). Reusa el predicado nombrado en ReportService.SIN_ASIGNAR — no reescribir
+     * la lógica de null-check aquí.
+     */
+    public List<Task> sinResponsable() {
+        return repository.findAll().stream()
+                .filter(ReportService.SIN_ASIGNAR)
+                .sorted(TaskOrders.POR_FECHA)
                 .toList();
     }
 }

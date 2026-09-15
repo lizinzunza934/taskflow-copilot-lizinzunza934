@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -154,6 +155,74 @@ class TaskServiceTest {
             assertThrows(TaskNotFoundException.class, () -> service.eliminar(999L));
             // never() + anyLong(): NO se borró nada. (Regla "todos matchers o ninguno": aquí anyLong()).
             verify(repository, never()).deleteById(anyLong());
+        }
+    }
+
+    @Nested
+    @DisplayName("vencidas")
+    class Vencidas {
+
+        @Test
+        void vencidas_devuelveSoloVencidasYEnOrden() {
+            // El repositorio devuelve en este orden: vencida hace 1 día, fecha en +3 días (futura),
+            // DONE vencida hace 10 días, sin dueDate, y vencida hace 5 días. Solo las vencidas (no DONE)
+            // deben retornarse, ordenadas por fecha ascendente (más antigua primero).
+            try {
+                Task t1day = new Task(10L, "Vencida1", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(1));
+                Task tFuture = new Task(11L, "Futura", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().plusDays(3));
+                Task tDoneOld = new Task(12L, "DoneOld", "d", TaskStatus.DONE, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(10));
+                Task tNoDate = new Task(13L, "Sin fecha", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, null);
+                Task t5day = new Task(14L, "Vencida5", "d", TaskStatus.IN_PROGRESS, Priority.MED, PROYECTO, 1L, java.time.LocalDate.now().minusDays(5));
+
+                when(repository.findAll()).thenReturn(List.of(t1day, tFuture, tDoneOld, tNoDate, t5day));
+
+                List<Task> vencidas = service.vencidas();
+
+                // Solo t5day y t1day, ordenadas por fecha ascendente -> t5day (más antigua) primero
+                assertEquals(2, vencidas.size());
+                assertEquals(14L, vencidas.get(0).getId());
+                assertEquals(10L, vencidas.get(1).getId());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("SinResponsable")
+    class SinResponsable {
+
+        @Test
+        void sinResponsable_filtraYOrdenaPorFecha() {
+            try {
+                Task t10 = new Task(20L, "T10", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(10));
+                Task withAssignee = new Task(21L, "ConResp", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 5L, java.time.LocalDate.now().plusDays(4));
+                Task tNoDate = new Task(22L, "SinFecha", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, null);
+                Task t2 = new Task(23L, "T2x", "d", TaskStatus.TODO, Priority.MED, PROYECTO, null, java.time.LocalDate.now().plusDays(2));
+
+                when(repository.findAll()).thenReturn(List.of(t10, withAssignee, tNoDate, t2));
+
+                List<Task> sin = service.sinResponsable();
+
+                List<Long> ids = sin.stream().map(Task::getId).toList();
+                assertEquals(List.of(23L, 20L, 22L), ids);
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
+        }
+
+        @Test
+        void sinResponsable_siNoHayDevuelveVacio() {
+            try {
+                Task withAssignee = new Task(31L, "ConResp", "d", TaskStatus.TODO, Priority.MED, PROYECTO, 5L, java.time.LocalDate.now().plusDays(4));
+                when(repository.findAll()).thenReturn(List.of(withAssignee));
+
+                List<Task> sin = service.sinResponsable();
+
+                assertEquals(0, sin.size());
+            } catch (Exception e) {
+                throw new IllegalStateException(e);
+            }
         }
     }
 
