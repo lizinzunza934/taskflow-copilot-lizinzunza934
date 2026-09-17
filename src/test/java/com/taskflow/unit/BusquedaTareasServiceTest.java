@@ -19,6 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyString;
 
 /**
  * Unit de TaskService.buscarPorTitulo: repositorio mockeado, tareas reales.
@@ -51,5 +53,7 @@ class BusquedaTareasServiceTest {
     void buscarPorTitulo_nullYLimpio_lanzanTaskValidationException() {
         assertThrows(TaskValidationException.class, () -> service.buscarPorTitulo(null));
         assertThrows(TaskValidationException.class, () -> service.buscarPorTitulo("   "));
+        // el repositorio NO debe ser llamado cuando la validación falla
+        verify(taskRepository, never()).findByTitleContainingIgnoreCase(anyString());
     }
 }
