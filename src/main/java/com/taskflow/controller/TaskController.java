@@ -98,6 +98,14 @@ public class TaskController {
         return tareas.stream().map(TaskMapper::aResponse).toList();
     }
 
+    @Operation(summary = "Busca tareas por título",
+            description = "Busca en todos los proyectos tareas cuyo título contiene el parámetro 'q' (case-insensitive). Devuelve 400 si 'q' falta o queda vacío.")
+    @GetMapping("/tasks/search")
+    public List<TaskResponse> searchTasks(@RequestParam(name = "q", required = false) String q) throws TaskValidationException {
+        List<Task> tareas = taskService.buscarPorTitulo(q);
+        return tareas.stream().map(TaskMapper::aResponse).toList();
+    }
+
     /**
      * POST /projects/{projectId}/tasks — crea una tarea bajo un proyecto. 201 + header Location
      * apuntando a donde el recurso SE LEE (/tasks/{id}), no a la URL de creación. @Valid dispara Bean
